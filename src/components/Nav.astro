@@ -1,0 +1,31 @@
+---
+import { site } from '../data/site';
+
+const links = [
+  { href: '/', label: 'home' },
+  { href: '/blog', label: 'blog' },
+  { href: '/archive', label: 'archive' },
+  { href: '/categories', label: 'categories' },
+  { href: '/tags', label: 'tags' },
+  { href: '/about', label: 'about' },
+];
+
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+---
+
+<header class="site-header">
+  <nav class="wrap nav">
+    <a href="/" class="brand">{site.handle}<span class="sep">@</span>web</a>
+    <div class="links">
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </div>
+  </nav>
+</header>

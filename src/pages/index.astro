@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Terminal from '../components/Terminal.astro';
+import PostCard from '../components/PostCard.astro';
+import { site } from '../data/site';
+import { getPosts, getCategories, getTags, slugify } from '../lib/posts';
+
+const recent = (await getPosts()).slice(0, 4);
+const categories = [...(await getCategories()).entries()].sort((a, b) => b[1].length - a[1].length);
+const tags = [...(await getTags()).entries()].sort((a, b) => b[1].length - a[1].length);
+---
+
+<Layout>
+  <section class="hero">
+    <h1>{site.name}</h1>
+    <p class="role">{site.role}</p>
+    <p class="tagline">{site.tagline}</p>
+    <Terminal />
+  </section>
+
+  <section style="margin-bottom:40px">
+    <h2 class="h-sec">latest posts</h2>
+    <div class="post-list">
+      {recent.map((post) => <PostCard post={post} />)}
+    </div>
+    <p style="margin-top:14px"><a href="/blog">→ all posts</a></p>
+  </section>
+
+  <div style="display:grid; gap:32px; grid-template-columns:1fr;">
+    <section>
+      <h2 class="h-sec">categories</h2>
+      <div class="chips">
+        {
+          categories.map(([name, posts]) => (
+            <a class="chip" href={`/categories/${slugify(name)}`}>
+              {name} <span class="count">({posts.length})</span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 class="h-sec">tags</h2>
+      <div class="chips">
+        {
+          tags.map(([name, posts]) => (
+            <a class="chip" href={`/tags/${slugify(name)}`}>
+              #{name} <span class="count">({posts.length})</span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</Layout>

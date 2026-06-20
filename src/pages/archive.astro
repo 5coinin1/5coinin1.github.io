@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getByYear, getPosts } from '../lib/posts';
+
+const years = await getByYear();
+const total = (await getPosts()).length;
+const md = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+---
+
+<Layout title="archive // 5coinin1" description="All posts by date.">
+  <h1 class="h-sec">archive <span class="muted">({total})</span></h1>
+
+  {years.length === 0 && <p class="muted">No posts yet.</p>}
+
+  {
+    years.map(([year, posts]) => (
+      <section>
+        <div class="year">{year}</div>
+        {posts.map((post) => (
+          <a href={`/blog/${post.id}`} class="arch-row">
+            <span class="d">{md(post.data.date)}</span>
+            <span>{post.data.title}</span>
+          </a>
+        ))}
+      </section>
+    ))
+  }
+</Layout>

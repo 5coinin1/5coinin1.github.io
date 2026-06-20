@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import type { GetStaticPaths } from 'astro';
+import { getCategories, slugify, type Post } from '../../lib/posts';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const categories = await getCategories();
+  return [...categories.entries()].map(([name, posts]) => ({
+    params: { category: slugify(name) },
+    props: { name, posts },
+  }));
+};
+
+const { name, posts } = Astro.props as { name: string; posts: Post[] };
+---
+
+<Layout title={`${name} // categories`}>
+  <p><a href="/categories">← all categories</a></p>
+  <h1 class="h-sec">category: {name} <span class="muted">({posts.length})</span></h1>
+  <div class="post-list">
+    {posts.map((post) => <PostCard post={post} />)}
+  </div>
+</Layout>

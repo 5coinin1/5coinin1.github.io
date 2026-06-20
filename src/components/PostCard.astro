@@ -1,0 +1,20 @@
+---
+import type { Post } from '../lib/posts';
+import { fmtDate } from '../lib/posts';
+
+interface Props {
+  post: Post;
+}
+const { post } = Astro.props;
+const { title, description, date, category, tags } = post.data;
+---
+
+<a href={`/blog/${post.id}`} class="post">
+  <div class="post-title">{title}</div>
+  <div class="post-meta">
+    <span class="amber">{fmtDate(date)}</span>
+    <span>in <span class="cyan">{category}</span></span>
+    {tags.length > 0 && <span>{tags.map((t) => `#${t}`).join(' ')}</span>}
+  </div>
+  {description && <div class="post-desc">{description}</div>}
+</a>

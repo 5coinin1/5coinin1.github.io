@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { site } from '../data/site';
+---
+
+<Layout title="about // 5coinin1">
+  <article class="prose">
+    <h1>about</h1>
+    {site.about.map((p) => <p>{p}</p>)}
+
+    <h2>whoami</h2>
+    <div class="kv" style="grid-template-columns:120px 1fr">
+      <span class="k">name</span><span>{site.name}</span>
+      <span class="k">role</span><span>{site.role}</span>
+      <span class="k">team</span><span>{site.team}</span>
+      <span class="k">location</span><span>{site.location}</span>
+      <span class="k">email</span><a href={`mailto:${site.email}`}>{site.email}</a>
+    </div>
+
+    <h2>ctf</h2>
+    {
+      site.ctf.map((e) => (
+        <p>
+          <strong class="glow">{e.event}</strong> — <span class="amber">{e.place}</span>
+          <br />
+          <span class="muted">{e.note}</span>
+        </p>
+      ))
+    }
+
+    <h2>find me</h2>
+    <div class="chips">
+      {
+        Object.entries(site.socials).map(([k, v]) => (
+          <a class="chip" href={v} target="_blank" rel="noopener">
+            {k}
+          </a>
+        ))
+      }
+    </div>
+  </article>
+</Layout>

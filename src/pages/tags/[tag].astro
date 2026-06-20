@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import type { GetStaticPaths } from 'astro';
+import { getTags, slugify, type Post } from '../../lib/posts';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const tags = await getTags();
+  return [...tags.entries()].map(([name, posts]) => ({
+    params: { tag: slugify(name) },
+    props: { name, posts },
+  }));
+};
+
+const { name, posts } = Astro.props as { name: string; posts: Post[] };
+---
+
+<Layout title={`#${name} // tags`}>
+  <p><a href="/tags">← all tags</a></p>
+  <h1 class="h-sec">tag: #{name} <span class="muted">({posts.length})</span></h1>
+  <div class="post-list">
+    {posts.map((post) => <PostCard post={post} />)}
+  </div>
+</Layout>

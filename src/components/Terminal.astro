@@ -1,0 +1,155 @@
+---
+import { site } from '../data/site';
+---
+
+<section class="window" id="terminal" aria-label="terminal">
+  <div class="titlebar">
+    <span class="dots"><i></i><i></i><i></i></span>
+    <span>guest@{site.handle}: ~</span>
+    <span class="muted" style="margin-left:auto" id="clock"></span>
+  </div>
+
+  <div class="screen" id="screen"></div>
+
+  <form class="prompt-row" id="promptForm" autocomplete="off" spellcheck="false">
+    <label class="ps1" for="cmd"
+      >guest@{site.handle}<span class="sep">:</span><span class="path">~</span
+      ><span class="dollar">$</span></label
+    >
+    <input type="text" id="cmd" name="cmd" aria-label="terminal input" />
+  </form>
+</section>
+
+<script type="application/json" id="site-data" set:html={JSON.stringify(site)} />
+
+<script>
+  type Site = {
+    handle: string; name: string; role: string; team: string; location: string;
+    email: string; tagline: string; about: string[]; socials: Record<string, string>;
+  };
+  const DATA: Site = JSON.parse(document.getElementById('site-data')!.textContent || '{}');
+
+  const screen = document.getElementById('screen')!;
+  const form = document.getElementById('promptForm') as HTMLFormElement;
+  const input = document.getElementById('cmd') as HTMLInputElement;
+  const clock = document.getElementById('clock')!;
+
+  const esc = (s: unknown) =>
+    String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+  const scrollDown = () => (screen.scrollTop = screen.scrollHeight);
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  function line(html = '', cls = '') {
+    const d = document.createElement('div');
+    d.className = 'line' + (cls ? ' ' + cls : '');
+    d.innerHTML = html;
+    return d;
+  }
+  const print = (html = '', cls = '') => {
+    screen.appendChild(line(html, cls));
+    scrollDown();
+  };
+
+  function typeLine(text: string, cls = '', speed = 16) {
+    return new Promise<void>((resolve) => {
+      const node = line('', cls);
+      node.classList.add('cursor');
+      screen.appendChild(node);
+      let i = 0;
+      (function tick() {
+        node.textContent = text.slice(0, i++);
+        scrollDown();
+        if (i <= text.length) setTimeout(tick, speed);
+        else {
+          node.classList.remove('cursor');
+          resolve();
+        }
+      })();
+    });
+  }
+
+  const COMMANDS: Record<string, (arg: string) => void> = {
+    help() {
+      print(
+        `<span class="glow">commands:</span> help · whoami · about · blog · social · clear`,
+      );
+    },
+    whoami() {
+      print(`<div class="kv">
+        <span class="k">name</span><span>${esc(DATA.name)}</span>
+        <span class="k">role</span><span>${esc(DATA.role)}</span>
+        <span class="k">team</span><span>${esc(DATA.team)}</span>
+        <span class="k">from</span><span>${esc(DATA.location)}</span>
+      </div>`);
+    },
+    about() {
+      print(DATA.about.map((p) => `<div>${esc(p)}</div>`).join(''));
+    },
+    blog() {
+      print(`opening /blog ...`, 'muted');
+      setTimeout(() => (window.location.href = '/blog'), 300);
+    },
+    social() {
+      print(
+        Object.entries(DATA.socials)
+          .map(([k, v]) => `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(k)}</a>`)
+          .join('  ·  '),
+      );
+    },
+    clear() {
+      screen.innerHTML = '';
+    },
+    cat(arg) {
+      if (arg.includes('flag')) print(`<span class="amber">flag{w3lc0m3}</span>`);
+      else print(`usage: cat &lt;file&gt;`);
+    },
+  };
+  const ALIASES: Record<string, string> = { socials: 'social', '?': 'help' };
+
+  function run(raw: string) {
+    const trimmed = raw.trim();
+    screen.appendChild(
+      line(
+        `<span class="ps1">$</span> ${esc(trimmed)}`,
+        'echo',
+      ),
+    );
+    if (!trimmed) return scrollDown();
+    const [name, ...rest] = trimmed.split(/\s+/);
+    const fn = COMMANDS[name] || COMMANDS[ALIASES[name]];
+    if (fn) fn(rest.join(' '));
+    else print(`<span class="red">command not found: ${esc(name)}</span> — try <span class="glow">help</span>`);
+  }
+
+  // auto intro (the "accent"): type a couple lines, then hand over to the user
+  async function intro() {
+    await typeLine(`> whoami`, 'echo');
+    COMMANDS.whoami('');
+    await sleep(450);
+    print('');
+    print(`type <span class="glow">help</span> to poke around, or just read on below.`, 'muted');
+    input.focus({ preventScroll: true });
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    run(input.value);
+    input.value = '';
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const m = Object.keys(COMMANDS).filter((c) => c.startsWith(input.value.trim()));
+      if (m.length === 1) input.value = m[0];
+    }
+  });
+  document.getElementById('terminal')!.addEventListener('click', () => {
+    if (!window.getSelection()?.toString()) input.focus({ preventScroll: true });
+  });
+
+  const tick = () => (clock.textContent = new Date().toLocaleTimeString([], { hour12: false }));
+  setInterval(tick, 1000);
+  tick();
+
+  intro();
+</script>

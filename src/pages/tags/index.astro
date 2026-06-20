@@ -1,0 +1,19 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getTags, slugify } from '../../lib/posts';
+
+const tags = [...(await getTags()).entries()].sort((a, b) => b[1].length - a[1].length);
+---
+
+<Layout title="tags // 5coinin1">
+  <h1 class="h-sec">tags</h1>
+  <div class="chips">
+    {
+      tags.map(([name, posts]) => (
+        <a class="chip" href={`/tags/${slugify(name)}`}>
+          #{name} <span class="count">({posts.length})</span>
+        </a>
+      ))
+    }
+  </div>
+</Layout>
